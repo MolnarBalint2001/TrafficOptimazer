@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="UTF-8"?><osm version="0.6" generator="Overpass API 0.7.62.4 2390de5a">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base="2025-01-04T10:47:11Z"/>
+
+  <bounds minlat="47.9040266" minlon="20.3521621" maxlat="47.9084138" maxlon="20.3623062"/>
+
+  <way id="19846966">
+    <nd ref="2317961215"/>
+    <nd ref="12121024229"/>
+    <nd ref="2317961214"/>
+    <nd ref="2317961213"/>
+    <nd ref="12121024235"/>
+    <nd ref="2317961211"/>
+    <nd ref="2317961210"/>
+    <nd ref="7737672624"/>
+    <tag k="highway" v="service"/>
+  </way>
+  <way id="26140723">
+    <nd ref="286275628"/>
+    <nd ref="12120999743"/>
+    <nd ref="286275471"/>
+    <nd ref="287520388"/>
+    <nd ref="1379093121"/>
+    <nd ref="286402259"/>
+    <nd ref="286402260"/>
+    <nd ref="12147867939"/>
+    <nd ref="12068766328"/>
+    <nd ref="2319185123"/>
+    <nd ref="286402256"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Csokonai Mihály utca"/>
+  </way>
+  <way id="26140803">
+    <nd ref="286273869"/>
+    <nd ref="1379093062"/>
+    <nd ref="286273591"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Mikes Kelemen utca"/>
+  </way>
+  <way id="26140812">
+    <nd ref="286275628"/>
+    <nd ref="12131104974"/>
+    <nd ref="286275470"/>
+    <nd ref="286273605"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Laktanya utca"/>
+  </way>
+  <way id="26154397">
+    <nd ref="286275471"/>
+    <nd ref="2319185121"/>
+    <nd ref="2314344520"/>
+    <nd ref="286402255"/>
+    <tag k="foot" v="yes"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Epreskert utca"/>
+    <tag k="oneway" v="yes"/>
+  </way>
+  <way id="26253671">
+    <nd ref="287520167"/>
+    <nd ref="12095898353"/>
+    <nd ref="12095898352"/>
+    <nd ref="12095898351"/>
+    <nd ref="1379093068"/>
+    <nd ref="1379093143"/>
+    <nd ref="2342943536"/>
+    <nd ref="287520168"/>
+    <nd ref="1379093077"/>
+    <nd ref="2342943547"/>
+    <nd ref="2343088610"/>
+    <nd ref="287520169"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Hevesy Sándor utca"/>
+  </way>
+  <way id="26253682">
+    <nd ref="287520387"/>
+    <nd ref="1370557357"/>
+    <nd ref="287520388"/>
+    <nd ref="2319185122"/>
+    <nd ref="1419996404"/>
+    <tag k="cycleway" v="no"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Ankli József utca"/>
+  </way>
+  <way id="26253694">
+    <nd ref="287520434"/>
+    <nd ref="12118950657"/>
+    <nd ref="1379093125"/>
+    <nd ref="287520386"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Váci Mihály utca"/>
+  </way>
+  <way id="72613615">
+    <nd ref="1379093055"/>
+    <nd ref="861878478"/>
+    <nd ref="1370557356"/>
+    <nd ref="1370557357"/>
+    <nd ref="12149549809"/>
+    <nd ref="1379093058"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Bercsényi Miklós utca"/>
+  </way>
+  <way id="123765896">
+    <nd ref="1379093077"/>
+    <nd ref="1379093125"/>
+    <nd ref="1379093129"/>
+    <nd ref="12147909341"/>
+    <tag k="highway" v="service"/>
+    <tag k="name" v="Verseghy Ferenc utca"/>
+    <tag k="surface" v="grass"/>
+  </way>
+  <way id="222465045">
+    <nd ref="2314344520"/>
+    <nd ref="2314344521"/>
+    <tag k="highway" v="service"/>
+  </way>
+  <way id="222975216">
+    <nd ref="286275470"/>
+    <nd ref="2319184962"/>
+    <nd ref="2319184963"/>
+    <nd ref="2319184964"/>
+    <nd ref="2319184965"/>
+    <nd ref="2319184966"/>
+    <nd ref="2319184967"/>
+    <nd ref="2319184968"/>
+    <tag k="highway" v="service"/>
+  </way>
+  <way id="222975242">
+    <nd ref="2319185121"/>
+    <nd ref="2319185122"/>
+    <nd ref="12149520633"/>
+    <nd ref="2319185123"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Gyóni Géza utca"/>
+  </way>
+  <way id="225070230">
+    <nd ref="2338932617"/>
+    <nd ref="12147945837"/>
+    <nd ref="2338932618"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Pázmány Péter utca"/>
+  </way>
+  <way id="225523021">
+    <nd ref="2342943536"/>
+    <nd ref="2342943537"/>
+    <tag k="highway" v="residential"/>
+  </way>
+  <way id="225523022">
+    <nd ref="2342943538"/>
+    <nd ref="2342943539"/>
+    <nd ref="2342943537"/>
+    <tag k="highway" v="track"/>
+  </way>
+  <way id="225523023">
+    <nd ref="2342943539"/>
+    <nd ref="2342943549"/>
+    <nd ref="2342943540"/>
+    <nd ref="2342943541"/>
+    <tag k="highway" v="track"/>
+  </way>
+  <way id="225523024">
+    <nd ref="2342943540"/>
+    <nd ref="12118950660"/>
+    <nd ref="2342943542"/>
+    <nd ref="2342943543"/>
+    <nd ref="12118950659"/>
+    <nd ref="2342943544"/>
+    <nd ref="2342943545"/>
+    <nd ref="2343088616"/>
+    <nd ref="2342943548"/>
+    <nd ref="2342943546"/>
+    <nd ref="2342943547"/>
+    <tag k="highway" v="track"/>
+  </way>
+  <way id="225523025">
+    <nd ref="2342943548"/>
+    <nd ref="2342943550"/>
+    <nd ref="2342943549"/>
+    <tag k="highway" v="track"/>
+  </way>
+  <way id="225523026">
+    <nd ref="2342943550"/>
+    <nd ref="2342943551"/>
+    <tag k="highway" v="track"/>
+  </way>
+  <way id="225538398">
+    <nd ref="2343088610"/>
+    <nd ref="2343088617"/>
+    <nd ref="2343088612"/>
+    <nd ref="2343088613"/>
+    <nd ref="2343088615"/>
+    <nd ref="2343088614"/>
+    <tag k="highway" v="track"/>
+  </way>
+  <way id="225538399">
+    <nd ref="2343088615"/>
+    <nd ref="2343088616"/>
+    <tag k="highway" v="track"/>
+  </way>
+  <way id="225538400">
+    <nd ref="2343088617"/>
+    <nd ref="2343088618"/>
+    <nd ref="2343088619"/>
+    <tag k="highway" v="track"/>
+  </way>
+  <way id="241094984">
+    <nd ref="1381790323"/>
+    <nd ref="1419996404"/>
+    <nd ref="1381790308"/>
+    <nd ref="286402256"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Baktai út"/>
+  </way>
+  <way id="1021065128">
+    <nd ref="287520168"/>
+    <nd ref="287520386"/>
+    <tag k="cycleway" v="no"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Ankli József utca"/>
+  </way>
+  <way id="1021065129">
+    <nd ref="287520386"/>
+    <nd ref="1379093047"/>
+    <nd ref="12118950656"/>
+    <nd ref="1379093035"/>
+    <nd ref="287520007"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Váci Mihály utca"/>
+  </way>
+  <way id="1021065130">
+    <nd ref="287520386"/>
+    <nd ref="287520387"/>
+    <tag k="cycleway" v="no"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Ankli József utca"/>
+  </way>
+  <way id="1021065131">
+    <nd ref="287520387"/>
+    <nd ref="1379093129"/>
+    <nd ref="286273542"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Mikes Kelemen utca"/>
+  </way>
+  <way id="1021065132">
+    <nd ref="1379093143"/>
+    <nd ref="1379093047"/>
+    <nd ref="286273591"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Laktanya utca"/>
+  </way>
+  <way id="1021065133">
+    <nd ref="286273591"/>
+    <nd ref="287520387"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Mikes Kelemen utca"/>
+  </way>
+  <way id="1021065134">
+    <nd ref="286274710"/>
+    <nd ref="12068586922"/>
+    <nd ref="12068779214"/>
+    <nd ref="1379093050"/>
+    <nd ref="12120999744"/>
+    <nd ref="12120999742"/>
+    <nd ref="286275628"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Csokonai Mihály utca"/>
+  </way>
+  <way id="1021065135">
+    <nd ref="286273591"/>
+    <nd ref="1370557356"/>
+    <nd ref="286275628"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Laktanya utca"/>
+  </way>
+  <way id="1306022846">
+    <nd ref="2338932617"/>
+    <nd ref="1379093121"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Verseghy Ferenc utca"/>
+    <tag k="surface" v="paved"/>
+  </way>
+  <way id="1308897747">
+    <nd ref="2317961215"/>
+    <nd ref="12121024230"/>
+    <nd ref="12121024231"/>
+    <nd ref="12121024232"/>
+    <nd ref="12121024233"/>
+    <nd ref="12121024234"/>
+    <tag k="highway" v="service"/>
+  </way>
+  <way id="1312101710">
+    <nd ref="1157442171"/>
+    <nd ref="1381790308"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Kisvölgy utca"/>
+    <tag k="oneway" v="no"/>
+  </way>
+  <way id="1312447634">
+    <nd ref="2339117122"/>
+    <nd ref="12147909338"/>
+    <nd ref="12147909339"/>
+    <nd ref="12147909340"/>
+    <tag k="highway" v="service"/>
+  </way>
+  <way id="1312447635">
+    <nd ref="12147909341"/>
+    <nd ref="12147867938"/>
+    <nd ref="1379093058"/>
+    <tag k="highway" v="path"/>
+    <tag k="name" v="Verseghy Ferenc utca"/>
+    <tag k="surface" v="unpaved"/>
+  </way>
+  <way id="1312447636">
+    <nd ref="2339117122"/>
+    <nd ref="12147899856"/>
+    <nd ref="12147899861"/>
+    <nd ref="2339117123"/>
+    <nd ref="2339117124"/>
+    <tag k="highway" v="service"/>
+  </way>
+  <way id="1312447637">
+    <nd ref="1379093058"/>
+    <nd ref="12147945838"/>
+    <tag k="highway" v="path"/>
+    <tag k="name" v="Verseghy Ferenc utca"/>
+    <tag k="surface" v="unpaved"/>
+  </way>
+  <way id="1312449468">
+    <nd ref="1379093058"/>
+    <nd ref="12147909340"/>
+    <nd ref="2339117122"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Bercsényi Miklós utca"/>
+  </way>
+  <way id="1312450446">
+    <nd ref="12147899861"/>
+    <nd ref="12147899862"/>
+    <tag k="highway" v="service"/>
+  </way>
+  <way id="1312451021">
+    <nd ref="12147945838"/>
+    <nd ref="2338932617"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Verseghy Ferenc utca"/>
+    <tag k="surface" v="unpaved"/>
+  </way>
+  <node id="2342943538" lat="47.9031844" lon="20.3547486"/>
+  <node id="2342943541" lat="47.9033174" lon="20.3536841"/>
+  <node id="286273542" lat="47.9095075" lon="20.3540563"/>
+  <node id="287520168" lat="47.9051008" lon="20.3549156"/>
+  <node id="287520169" lat="47.9085984" lon="20.3520138"/>
+  <node id="287520434" lat="47.9091536" lon="20.3530363"/>
+  <node id="1379093077" lat="47.9061985" lon="20.3539979"/>
+  <node id="1379093125" lat="47.9065943" lon="20.3551599"/>
+  <node id="2342943536" lat="47.9050039" lon="20.3550017"/>
+  <node id="2342943537" lat="47.9047230" lon="20.3544052"/>
+  <node id="2342943539" lat="47.9043570" lon="20.3536754"/>
+  <node id="2342943540" lat="47.9039990" lon="20.3530476"/>
+  <node id="2342943542" lat="47.9038763" lon="20.3525183"/>
+  <node id="2342943543" lat="47.9043493" lon="20.3518900"/>
+  <node id="2342943544" lat="47.9048543" lon="20.3513191"/>
+  <node id="2342943545" lat="47.9049236" lon="20.3513789"/>
+  <node id="2342943546" lat="47.9056015" lon="20.3527327"/>
+  <node id="2342943547" lat="47.9062355" lon="20.3539610"/>
+  <node id="2342943548" lat="47.9053551" lon="20.3522096"/>
+  <node id="2342943549" lat="47.9042096" lon="20.3534234"/>
+  <node id="2342943550" lat="47.9046442" lon="20.3529757"/>
+  <node id="2342943551" lat="47.9049631" lon="20.3534441"/>
+  <node id="2343088610" lat="47.9073903" lon="20.3530060"/>
+  <node id="2343088612" lat="47.9061559" lon="20.3503333"/>
+  <node id="2343088613" lat="47.9055279" lon="20.3509639"/>
+  <node id="2343088614" lat="47.9063462" lon="20.3526522"/>
+  <node id="2343088615" lat="47.9058437" lon="20.3516509"/>
+  <node id="2343088616" lat="47.9053324" lon="20.3521787"/>
+  <node id="2343088617" lat="47.9072307" lon="20.3525753"/>
+  <node id="2343088618" lat="47.9081629" lon="20.3516468"/>
+  <node id="2343088619" lat="47.9069921" lon="20.3491098"/>
+  <node id="12118950657" lat="47.9078743" lon="20.3540943"/>
+  <node id="12118950659" lat="47.9047361" lon="20.3514055"/>
+  <node id="12118950660" lat="47.9038267" lon="20.3527366"/>
+  <node id="286273869" lat="47.9018644" lon="20.3598180"/>
+  <node id="287520007" lat="47.9017864" lon="20.3584185"/>
+  <node id="287520167" lat="47.9017559" lon="20.3577636"/>
+  <node id="861878478" lat="47.9030344" lon="20.3607519"/>
+  <node id="1379093035" lat="47.9021062" lon="20.3583635"/>
+  <node id="1379093050" lat="47.9031227" lon="20.3619266"/>
+  <node id="1379093055" lat="47.9028140" lon="20.3609339"/>
+  <node id="1379093062" lat="47.9025601" lon="20.3595918"/>
+  <node id="1379093068" lat="47.9025547" lon="20.3572743"/>
+  <node id="12095898351" lat="47.9023424" lon="20.3574406"/>
+  <node id="12095898352" lat="47.9020840" lon="20.3576560"/>
+  <node id="12095898353" lat="47.9018773" lon="20.3577463"/>
+  <node id="12118950656" lat="47.9023975" lon="20.3582384"/>
+  <node id="286274710" lat="47.9023008" lon="20.3624953"/>
+  <node id="2317961210" lat="47.9035258" lon="20.3632466"/>
+  <node id="7737672624" lat="47.9035320" lon="20.3636230"/>
+  <node id="12068586922" lat="47.9024722" lon="20.3624222"/>
+  <node id="12068779214" lat="47.9026213" lon="20.3623329"/>
+  <node id="286273591" lat="47.9041480" lon="20.3584553"/>
+  <node id="286275470" lat="47.9046925" lon="20.3614797"/>
+  <node id="286275471" lat="47.9052073" lon="20.3602727"/>
+  <node id="286275628" lat="47.9046763" lon="20.3607032"/>
+  <node id="286402256" lat="47.9087784" lon="20.3600634"/>
+  <node id="286402259" lat="47.9077043" lon="20.3581999"/>
+  <node id="286402260" lat="47.9078383" lon="20.3582097"/>
+  <node id="287520386" lat="47.9054733" lon="20.3560471"/>
+  <node id="287520387" lat="47.9058178" lon="20.3571242"/>
+  <node id="287520388" lat="47.9064762" lon="20.3591233"/>
+  <node id="1370557356" lat="47.9044196" lon="20.3596256"/>
+  <node id="1370557357" lat="47.9061638" lon="20.3581778"/>
+  <node id="1379093047" lat="47.9038477" lon="20.3572727"/>
+  <node id="1379093058" lat="47.9072195" lon="20.3573366"/>
+  <node id="1379093121" lat="47.9075097" lon="20.3582206"/>
+  <node id="1379093129" lat="47.9069352" lon="20.3561911"/>
+  <node id="1379093143" lat="47.9035963" lon="20.3563432"/>
+  <node id="1381790308" lat="47.9075790" lon="20.3614964"/>
+  <node id="1419996404" lat="47.9073310" lon="20.3617525"/>
+  <node id="2314344520" lat="47.9056899" lon="20.3619370"/>
+  <node id="2317961215" lat="47.9038061" lon="20.3620341"/>
+  <node id="2319184962" lat="47.9049627" lon="20.3614512"/>
+  <node id="2319184963" lat="47.9049876" lon="20.3613586"/>
+  <node id="2319184964" lat="47.9051913" lon="20.3612215"/>
+  <node id="2319184965" lat="47.9052463" lon="20.3612522"/>
+  <node id="2319184966" lat="47.9054013" lon="20.3618026"/>
+  <node id="2319184967" lat="47.9053688" lon="20.3618415"/>
+  <node id="2319184968" lat="47.9051366" lon="20.3618513"/>
+  <node id="2319185121" lat="47.9056224" lon="20.3617028"/>
+  <node id="2319185122" lat="47.9069160" lon="20.3604980"/>
+  <node id="2319185123" lat="47.9083612" lon="20.3591238"/>
+  <node id="2338932617" lat="47.9074661" lon="20.3580129"/>
+  <node id="2338932618" lat="47.9081388" lon="20.3574444"/>
+  <node id="2339117122" lat="47.9082979" lon="20.3564319"/>
+  <node id="2339117123" lat="47.9086984" lon="20.3575689"/>
+  <node id="2339117124" lat="47.9083506" lon="20.3578206"/>
+  <node id="12068766328" lat="47.9081125" lon="20.3585537"/>
+  <node id="12120999742" lat="47.9044851" lon="20.3608100"/>
+  <node id="12120999743" lat="47.9047800" lon="20.3606253"/>
+  <node id="12120999744" lat="47.9038478" lon="20.3613245"/>
+  <node id="12121024229" lat="47.9042427" lon="20.3620265"/>
+  <node id="12121024230" lat="47.9037814" lon="20.3619833"/>
+  <node id="12121024231" lat="47.9037770" lon="20.3617594"/>
+  <node id="12121024232" lat="47.9038035" lon="20.3616540"/>
+  <node id="12121024233" lat="47.9038896" lon="20.3616277"/>
+  <node id="12121024234" lat="47.9044503" lon="20.3611403"/>
+  <node id="12131104974" lat="47.9046601" lon="20.3608853"/>
+  <node id="12147867938" lat="47.9070954" lon="20.3568246"/>
+  <node id="12147867939" lat="47.9080031" lon="20.3583465"/>
+  <node id="12147899856" lat="47.9084064" lon="20.3566894"/>
+  <node id="12147899861" lat="47.9086342" lon="20.3573755"/>
+  <node id="12147899862" lat="47.9083115" lon="20.3576031"/>
+  <node id="12147909338" lat="47.9081887" lon="20.3561407"/>
+  <node id="12147909339" lat="47.9071744" lon="20.3569443"/>
+  <node id="12147909340" lat="47.9072969" lon="20.3572705"/>
+  <node id="12147909341" lat="47.9070012" lon="20.3564154"/>
+  <node id="12147945837" lat="47.9075051" lon="20.3579355"/>
+  <node id="12147945838" lat="47.9073370" lon="20.3577143"/>
+  <node id="12149520633" lat="47.9072323" lon="20.3601876"/>
+  <node id="12149549809" lat="47.9062445" lon="20.3581061"/>
+  <node id="286273605" lat="47.9048171" lon="20.3638665"/>
+  <node id="286402255" lat="47.9060524" lon="20.3631080"/>
+  <node id="1157442171" lat="47.9076735" lon="20.3636158"/>
+  <node id="1381790323" lat="47.9062227" lon="20.3629369"/>
+  <node id="2314344521" lat="47.9054782" lon="20.3620745"/>
+  <node id="2317961211" lat="47.9036462" lon="20.3630683"/>
+  <node id="2317961213" lat="47.9043618" lon="20.3629038"/>
+  <node id="2317961214" lat="47.9042839" lon="20.3620608"/>
+  <node id="12121024235" lat="47.9042546" lon="20.3630088"/>
+
+</osm>
