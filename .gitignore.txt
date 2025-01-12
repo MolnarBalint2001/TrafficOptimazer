@@ -1,0 +1,94 @@
+# This .gitignore file is tailored for Unity projects.
+
+
+#VS
+.vs/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# User-specific settings
+*.userprefs
+*.suo
+*.user
+*.userosscache
+*.sln
+*.csproj
+
+# Unity specific
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+*.pidb
+*.booproj
+*.svd
+
+# Visual Studio Code
+.vscode/
+
+# Unity metadata
+/[Aa]ssets/Plugins/*/*.meta
+/[Aa]ssets/StreamingAssets/*/*.meta
+
+# Build artifacts
+/[Bb]uilds/
+*.apk
+*.aab
+*.unitypackage
+
+# Crash reports
+[Cc]rashReports/
+
+# Auto-generated files
+*.dll
+*.exe
+*.pdb
+*.mdb
+*.class
+*.jar
+*.swp
+*.lock
+
+# Other generated files
+*.meta
+*.tmp
+
+# Logs
+*.log
+
+# Exclude files from asset pipeline caching
+/Assets/**/AssetStoreTools*
+
+# Rider IDE
+.idea/
+*.sln.iml
+*.sln.ide
+
+# JetBrains Rider files
+*.ipr
+*.iws
+.idea/
+.idea_modules/
+
+# Unity Cloud Build
+[Uu]nity[Cc]loud[Bb]uild/
+
+# Other temporary files
+[Dd]ebug/
+
+# Cache files
+/[Cc]ache/
+
+# Generated files specific to Unity Editor versions
+/Library/Artifacts/
+
+# Ignore ProBuilder autosaves
+/[Aa]ssets/ProBuilder/Autosave.*
+
+# Ignore Timeline preview caches
+/[Aa]ssets/Timeline/Preview.*.timeline
