@@ -2,9 +2,18 @@
 using Assets.Services;
 using System.Collections.Generic;
 using UnityEngine;
+using Assets.Scripts;
+using static Assets.Scripts.TrafficLightController;
+using System.Transactions;
+using System.Security.Cryptography;
 
 namespace Assets.Scripts
 {
+
+    /// <summary>
+    /// A* agent controller
+    /// handling vehicle logic
+    /// </summary>
     public class AStarAgentController : MonoBehaviour
     {
         private enum VehicleType
@@ -14,6 +23,8 @@ namespace Assets.Scripts
             MOTORCYClE = 2,
             BUS = 3,
         }
+
+        public float elapsedTime = 0;
 
         /// <summary>
         /// A* search service
@@ -28,7 +39,7 @@ namespace Assets.Scripts
         /// <summary>
         /// Current waypoint index
         /// </summary>
-        private int currentWaypointIndex = 1;
+        public int currentWaypointIndex = 1;
 
         /// <summary>
         /// Renderer
@@ -43,7 +54,7 @@ namespace Assets.Scripts
         /// <summary>
         /// Maximal speed
         /// </summary>
-        private float maxSpeed = 15f;
+        private float maxSpeed = 20f;
 
         /// <summary>
         /// Minimal turn speed
@@ -82,28 +93,29 @@ namespace Assets.Scripts
 
         private Vector3 velocity = Vector3.zero;
 
+        public bool isStopped { get; set; } = false;
 
-        private float detectionSensivity = 30f;
-
-        private int obstacleLayer;
-
-        private float detectionAngle = 45f;
+        private GameObject? currentTrafficLight { get; set; }
 
 
+        private Rigidbody rb;
 
+
+        public Spawner spawner;
+       
 
         void Start()
         {
-            obstacleLayer = LayerMask.NameToLayer("Obstacles");
-            // Lekérdezzük a GameObject layerét és kiírjuk a konzolra
-            int layer = gameObject.layer;
+           
+            rb = GetComponent<Rigidbody>();
             Initialize();
         }
 
-
         void Update()
         {
-            if (path is null)
+
+            MeasureElapsedTime();
+            if (path == null)
             {
                 System.Random random = new System.Random();
                 int rri = random.Next(0, roads.Count);
@@ -114,52 +126,13 @@ namespace Assets.Scripts
             }
             else
             {
-                DetectObstacles();
                 MoveToNextWaypoint();
             }
-
         }
-
-
-
-        private void DetectObstacles()
-        {
-
-            if (path is null || path?.Count <= currentWaypointIndex) return;
-
-            RaycastHit hit;
-            Vector3 rayOrigin = transform.position;  // A sugár kiindulási pontja (autó pozíciója)
-            Vector3 rayDirection = (path[currentWaypointIndex] - rayOrigin).normalized;
-
-            Vector3 rayTarget = rayOrigin + rayDirection * detectionSensivity;
-
-
-            bool detected = Physics.SphereCast(rayOrigin, 5f, rayTarget, out hit, detectionSensivity, obstacleLayer);
-
-
-            if (detected)
-            {
-
-                // Ha van akadály a megadott távolságon belül, lassítunk
-                // Pirossal rajzolja ki a Raycast-ot
-                Debug.Log("Van előttem valami");
-                // Lassítunk az autót a közelben lévő akadály miatt
-                //currentSpeed = Mathf.Lerp(currentSpeed, originalSpeed * slowdownFactor, Time.deltaTime);
-            }
-            else
-            {
-                //Debug.Log("Nincs előttem semmi");
-                // Ha nincs akadály, visszaállítjuk az eredeti sebességet
-                //currentSpeed = Mathf.Lerp(currentSpeed, originalSpeed, Time.deltaTime);
-            }
-
-        }
-
-
 
         private void Initialize()
         {
-
+            
             System.Random random = new System.Random();
             int rri = random.Next(0, roads.Count);
             int rni = random.Next(0, roads[rri].ControlPoints.Count);
@@ -169,6 +142,7 @@ namespace Assets.Scripts
             transform.localScale = new Vector3(1, 1, 2.5f);
             var collider = gameObject.GetComponent<BoxCollider>();
             collider.size = new Vector3(1.5f, 1, 1.5f);
+            collider.center = new Vector3(0, 0, 0.25f);
             collider.isTrigger = true;
             TransformPath();
         }
@@ -176,7 +150,7 @@ namespace Assets.Scripts
         private void TransformPath()
         {
 
-            if (path is null) return;
+            if (path == null) return;
             List<Vector3> transformedPath = new List<Vector3>();
 
             for (int i = 0; i < path.Count; i++)
@@ -207,43 +181,24 @@ namespace Assets.Scripts
 
         }
 
-        private void GenerateNewPath()
-        {
-            Vector3 currentPosition = transform.position;
-            System.Random random = new System.Random();
-            int rri = random.Next(0, roads.Count);
-            int rni = random.Next(0, roads[rri].ControlPoints.Count);
-            goal = roads[rri].ControlPoints[rni];
-
-
-            path = aStarSearch.FindPath(graph, start, goal, nodes);
-            Debug.Log($"Megvan az uj path: {path.Count}");
-
-
-            TransformPath();
-            speed = 15f;
-            currentWaypointIndex = 0;
-        }
-
-
-
         private void MoveToNextWaypoint()
         {
 
 
-            if (path is null || currentWaypointIndex >= path?.Count)
+            
+            if (path == null || currentWaypointIndex >= path?.Count - 1 || Vector3.Distance(transform.position, goal.Position) == 0)
+            {
+                
+                Destroy(this.gameObject);
+                spawner.SetDestroyed();
+                return;
+            }
+
+            if (isStopped)
             {
                 return;
             }
 
-
-
-            if (Vector3.Distance(transform.position, goal.Position) == 0)
-            {
-                speed = 0f;
-                GenerateNewPath();
-                return;
-            }
 
             Vector3 target = path[currentWaypointIndex];
             Vector3 direction = (target - transform.position).normalized;
@@ -256,7 +211,7 @@ namespace Assets.Scripts
             }
 
 
-            Vector3 nextWaypoint = path[currentWaypointIndex + 1];
+            /*Vector3 nextWaypoint = path[currentWaypointIndex + 1];
             if (nextWaypoint != null)
             {
                 var dir1 = (path[currentWaypointIndex] - transform.position).normalized;
@@ -266,13 +221,14 @@ namespace Assets.Scripts
 
                 if (Vector3.Distance(transform.position, target) < 5f)
                 {
+                    
                     targetSpeed = Mathf.Lerp(maxSpeed, turnSpeed, Mathf.InverseLerp(0, 90f, turnAngle));
                 }
 
             }
 
 
-            speed = Mathf.SmoothDamp(speed, targetSpeed, ref velocity.z, 0.5f);
+            speed = Mathf.SmoothDamp(speed, targetSpeed, ref velocity.z, 0.5f);*/
 
 
             if (Vector3.Distance(transform.position, target) == 0)
@@ -283,33 +239,111 @@ namespace Assets.Scripts
         }
 
 
+        #region Timers
+        /// <summary>
+        /// Measuring the elapsed time between start and goal
+        /// Observable metrics
+        /// </summary>
+        private void MeasureElapsedTime()
+        {
+            if (goal != null || transform.position != goal.Position)
+            {
+                elapsedTime += Time.deltaTime;
 
-        // Trigger beállítása az akadály észleléséhez
+            }
+        }
+
+      
+        public void DestroySelf()
+        {
+            Destroy(this.gameObject);
+        }
+
+        #endregion
+
+
+        #region Collision triggers
+
         private void OnTriggerEnter(Collider other)
         {
 
-            if (other.gameObject.layer == LayerMask.NameToLayer("Obstacles"))  // Tegyük fel, hogy az akadály "Obstacle" tag-gel rendelkezik
+            if (other.gameObject.CompareTag("TrafficLight"))
             {
-
-                Debug.Log("Megközílette");
-                var controller = other.gameObject.GetComponent<AStarAgentController>();
-                speed = 0f;
-
+                
+                TrafficLightController tflController = other.gameObject.GetComponent<TrafficLightController>();
+                LightState lightStatus = tflController.currentState;
+                if (lightStatus == LightState.Red) {
+                    isStopped = true;
+                    speed = 0f;
+                    currentTrafficLight = other.gameObject;
+                }
 
             }
+
+            if (other.gameObject.CompareTag("Vehicle"))
+            {
+
+                if (other.CompareTag("Front") || other.CompareTag("Body"))
+                {
+                    gameObject.GetComponent<Renderer>().material.color = Color.red;
+                    isStopped = true;
+                    Destroy(this.gameObject, 2f);
+                    spawner.SetDestroyed();
+                   
+                }
+                else
+                {
+                    var controller = other.gameObject.GetComponent<AStarAgentController>();
+                    speed = controller.speed;
+                    if (speed == 0)
+                    {
+                        isStopped = true;
+                    }
+                }
+            }
         }
+
+
+
+        private void OnTriggerStay(Collider other)
+        {
+            if (other.gameObject.CompareTag("TrafficLight"))
+            {
+                TrafficLightController controller = other.gameObject.GetComponent<TrafficLightController>();
+                LightState status = controller.currentState;
+                if (status == LightState.Green)
+                {
+                    isStopped = false;
+                    speed = 15f;
+                }
+            }
+        }
+
+
+       
 
         private void OnTriggerExit(Collider other)
         {
-            if (other.gameObject.layer == LayerMask.NameToLayer("Obstacles"))
+            if (other.gameObject.CompareTag("TrafficLight"))
             {
+                TrafficLightController controller = other.gameObject.GetComponent<TrafficLightController>();
+                LightState status = controller.currentState;
+                if (status != LightState.Red)
+                {
+                    currentTrafficLight = null;
+                }
+            }
 
+
+            if (other.gameObject.CompareTag("Vehicle"))
+            {
                 speed = 15f;
-
-                Debug.Log("Elengedte");
-
+                isStopped = false;
             }
         }
+
+        #endregion
+
 
     }
 }
