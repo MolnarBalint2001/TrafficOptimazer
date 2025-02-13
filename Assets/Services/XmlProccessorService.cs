@@ -17,7 +17,7 @@ namespace Assets.Services
     public class XmlProcessorService : IXmlProcessorService
     {
 
-        private const int SCALE_CONSTANT = 100000;
+        private const int SCALE_CONSTANT = 150000;
 
         /// <summary>
         /// OSM map minimum longitude
@@ -48,7 +48,6 @@ namespace Assets.Services
         /// All way elements from OSM data
         /// </summary>
         private List<XElement> _wayElements { get; set; } = new List<XElement>();
-
 
         /// <summary>
         /// Constructor
@@ -210,6 +209,12 @@ namespace Assets.Services
                 {
 
                     string id = node.Attribute("id").Value;
+                    if (id == "42428179")
+                    {
+
+                        int tagCount = node.Elements("tag").Count();
+                        Debug.Log($"XML process: {id} tags:{tagCount}");
+                    }
 
                     float lat = ParseFloat(node.Attribute("lat")!.Value);
                     float lon = ParseFloat(node.Attribute("lon")!.Value);
@@ -305,16 +310,16 @@ namespace Assets.Services
                     return false;
                 }).ToList();
 
-            Debug.Log($"XML traffic lights count: {trafficLightElements.Count}");
-
             List<TrafficSignal> trafficLights = trafficLightElements.Select(x =>
             {
+                string id = x.Attribute("id")?.Value;
                 float lat = ParseFloat(x.Attribute("lat")!.Value);
                 float lon = ParseFloat(x.Attribute("lon")!.Value);
                 (float normLat, float normLon) = Normalize(lat, lon);
 
                 TrafficSignal trafficSignal = new TrafficSignal();
-                trafficSignal.Position = new Vector3(normLon, 5, normLat);
+                trafficSignal.Id = id;
+                trafficSignal.Position = new Vector3(normLon, 0, normLat);
 
                 return trafficSignal;
             }).ToList();

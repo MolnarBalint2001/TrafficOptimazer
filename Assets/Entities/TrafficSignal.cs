@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Data.Common;
+using UnityEngine;
 
 namespace Assets.Entities
 {
@@ -12,10 +14,14 @@ namespace Assets.Entities
         public enum TrafficSignalDirection
         {
             BOTH,
-            LEFT,
-            RIGHT,
-            NONE
+            BACKWARD,
+            FORWARD,
         }
+
+        /// <summary>
+        /// Unique identifier
+        /// </summary>
+        public string Id { get; set; }
 
         /// <summary>
         /// Direction
@@ -35,6 +41,9 @@ namespace Assets.Entities
         {
             return $"TrafficLight({Position.ToString()})";
         }
+
+
+       
 
     }
 }

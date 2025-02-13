@@ -7,6 +7,12 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Splines;
+using System;
+using UnityEditor.UIElements;
+using Unity.VisualScripting;
+using Unity.MLAgents.Policies;
+using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 
 
 /*[out:xml]
@@ -15,6 +21,7 @@ using UnityEngine.Splines;
 (
   way["highway"]["highway" != "path"]["highway" != "steps"]["highway" != "ciclyeway"]["highway" != "footway"]["highway"]({{bbox}});
   node["highway" = "traffic_signals"]["traffic_signals" = "signal"]({{bbox}});
+
 );
 
 out body;
@@ -28,26 +35,42 @@ out skel qt;*/
 /// </summary>
 public class ContainerInitialize : MonoBehaviour
 {
-
     /// <summary>
     /// XML processor service
     /// </summary>
     private IXmlProcessorService xmlProcessorService = new XmlProcessorService();
 
+    /// <summary>
+    /// Spawner service
+    /// responsible for spawning vehicles and manage reinforcement
+    /// </summary>
+    private Spawner spawner;
+
+    /// <summary>
+    /// Graph
+    /// </summary>
     private Dictionary<string, List<Node>> graph;
 
+    /// <summary>
+    /// Node collection
+    /// </summary>
     private Dictionary<string, Node> nodeCollection;
 
+    /// <summary>
+    /// Roads
+    /// </summary>
     private List<Road> roads;
+
+    /// <summary>
+    /// TrafficLights
+    /// </summary>
+    private List<TrafficSignal> trafficLights;
 
     public SplineContainer splineContainer;
 
     const float roadWidth = 2.5f;
 
-
     public Material roadMaterial;
-
-
 
 
     void Awake()
@@ -59,86 +82,69 @@ public class ContainerInitialize : MonoBehaviour
             Debug.LogError("Nem található a Material a megadott úton!");
         }
     }
-
-
     void Start()
     {
 
-
-
-        BuildWithoutIntersections();
-        //SplineTest();
-        //DefaultTestMesh();
-        //GenerateTrafficLights();
-
+        GameObject tf = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        tf.AddComponent<TrafficLightController>();
+        tf.transform.position = new Vector3(0, 2, 0);
+        //GenerateNetwork();
+        //InitializeServices();
     }
-
-
     void Update()
     {
-        BatchSpawn();
-        //SpawnAStarAgent();
+      
     }
-
-    void BatchSpawn()
+    private void OnDrawGizmos()
     {
-        bool isPressed = Input.GetKeyDown(KeyCode.Space);
-        if (isPressed)
+        GenerateCollisonZones();
+    }
+    private void InitializeServices()
+    {
+        if (spawner == null)
         {
-            System.Random random = new System.Random();
-
-
-            for (int i = 0; i < 300; i++)
-            {
-                int rnd1 = random.Next(0, roads.Count);
-                var road = roads[rnd1];
-                int rnd2 = random.Next(0, road.ControlPoints.Count);
-                var start = road.ControlPoints[rnd2];
-                SpawnVehicle(start, Color.black);
-
-            }
-
-
+            GameObject spawnerObject = new GameObject("Spawner");
+            spawnerObject.transform.SetParent(transform);
+            spawner = spawnerObject.AddComponent<Spawner>();
+            spawner.nodes = nodeCollection;
+            spawner.roads = roads;
+            spawner.graph = graph;
         }
-    }
 
 
-    void SpawnVehicle(Node start, Color color)
-    {
+        GameObject masterAgent = new GameObject("MasterAgent");
+        var masterController = masterAgent.AddComponent<MasterController>();
+        masterController.spawner = spawner;
 
-        GameObject vehicle = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        vehicle.name = "Vehicle";
-        vehicle.tag = "Vehicle";
-        vehicle.layer = LayerMask.NameToLayer("Obstacles");
-        var vehcont = vehicle.AddComponent<AStarAgentController>();
-        var rigidBody = vehicle.AddComponent<Rigidbody>();
-        rigidBody.isKinematic = true;
-        vehcont.gameObject.layer = LayerMask.NameToLayer("Obstacles");
-        vehcont.roads = roads;
-        vehcont.nodes = nodeCollection;
-        vehcont.graph = graph;
-        vehcont.start = start;
-        vehicle.GetComponent<Renderer>().material.color = color;
+        var behaviorParams = masterAgent.AddComponent<BehaviorParameters>();
+        behaviorParams.BrainParameters.ActionSpec = ActionSpec.MakeContinuous(trafficLights.Count * 2);
+        behaviorParams.BehaviorType = BehaviorType.Default;
+        
+
+        var decisionRequester = masterAgent.AddComponent<DecisionRequester>();
+        decisionRequester.DecisionPeriod = 5;
 
 
     }
-
-    void BuildWithoutIntersections()
+    private void GenerateNetwork()
     {
-        Debug.Log("Angle test: " + Vector3.Angle(new Vector3(0, 0, 1), new Vector3(1, 0, 1)));
+        MapData mapData = xmlProcessorService.LoadXMLDocument("manhattan_training1.osm");
+        GenerateRoads(mapData.Roads);
+        GenerateTrafficLights(mapData.TrafficLights);
+    }
+    private void GenerateRoads(List<Road> r)
+    {
         List<Vector3> vertices = new List<Vector3>();
         List<int> triangles = new List<int>();
 
-        MapData mapData = xmlProcessorService.LoadXMLDocument("manhattan.osm");
-
-        roads = mapData.Roads;
-        graph = GraphBuilder.BuildGraph(mapData.Roads);
-        nodeCollection = GraphBuilder.BuildNodeCollection(mapData.Roads);
+        roads = r;
+        graph = GraphBuilder.BuildGraph(roads);
+        nodeCollection = GraphBuilder.BuildNodeCollection(roads);
         //GraphBuilder.PrintGraph(graph);
 
 
 
-        foreach (var road in mapData.Roads)
+        foreach (var road in roads)
         {
 
             for (int i = 0; i < road.ControlPoints.Count - 1; i++)
@@ -147,7 +153,9 @@ public class ContainerInitialize : MonoBehaviour
                 var currentNode = road.ControlPoints[i];
                 var nextNode = road.ControlPoints[i + 1];
 
-
+               
+               
+               
                 //Debug.DrawLine(currentNode.Position, nextNode.Position, Color.green, float.PositiveInfinity);
 
                 if (currentNode.IsIntersectionNode)
@@ -308,16 +316,20 @@ public class ContainerInitialize : MonoBehaviour
             }
         }
 
-
-        GenerateTrafficLights(mapData.TrafficLights);
-
         Mesh mesh = new Mesh();
 
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
 
+        Vector2[] uvs = new Vector2[mesh.vertices.Length];
+
+        for (int i = 0; i < mesh.vertices.Length; i++)
+        {
+            uvs[i] = new Vector2(vertices[i].x, vertices[i].z);
+        }
 
 
+        mesh.uv = uvs;
 
         MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
         meshFilter.mesh = mesh;
@@ -331,22 +343,89 @@ public class ContainerInitialize : MonoBehaviour
 
         mesh.RecalculateBounds();
     }
-
-
-
-    void GenerateTrafficLights(List<TrafficSignal> trafficLights)
+    private void GenerateTrafficLights(List<TrafficSignal> tflList)
     {
+
+        trafficLights = tflList;
+        GameObject trafficLightsContainer = new GameObject("TrafficLightContainer");
+
         foreach (var trafficLight in trafficLights)
         {
+            var children = graph[trafficLight.Id];
+            if (children.Count <= 2)
+            {
+                continue;
+            }
 
-            GameObject tflObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            tflObj.name = "TrafficLight";
-            tflObj.tag = "TrafficLight";
-            tflObj.layer = LayerMask.NameToLayer("TrafficLights");
-            var tflcont = tflObj.AddComponent<TrafficLightController>();
-            tflcont.position = trafficLight.Position;
-            Debug.DrawLine(tflcont.position, new Vector3(tflcont.position.x, tflcont.position.y + 20, tflcont.position.z), Color.magenta, float.PositiveInfinity);
+            for (int i = 0; i<children.Count; i++)
+            {
+                var child = children[i];
+                var direction = (child.Position - trafficLight.Position).normalized;
+                var offsetPoint = trafficLight.Position + direction * 5f;
+                var normal = Vector3.Cross(direction, Vector3.up).normalized;
+                var left = offsetPoint + normal * roadWidth;
 
+                Debug.DrawLine(trafficLight.Position, offsetPoint, Color.magenta, float.PositiveInfinity);
+                Debug.DrawLine(offsetPoint, left, Color.magenta, float.PositiveInfinity);
+
+                Vector3[] scopeBounds = new Vector3[4];
+
+                var childChildren = graph[child.Id];
+                Debug.DrawLine(child.Position, childChildren[0].Position, Color.magenta, float.PositiveInfinity);
+                var d = (child.Position - trafficLight.Position);
+                Debug.DrawLine(left, child.Position, Color.red, float.PositiveInfinity);
+
+                GameObject tflObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                tflObj.name = "TrafficLight";
+                tflObj.tag = "TrafficLight";
+                tflObj.transform.localScale = new Vector3(0.2f, 5, 0.2f);
+                tflObj.transform.position = new Vector3(left.x, 2.5f, left.z);
+                tflObj.transform.SetParent(trafficLightsContainer.transform);
+                var directionToOffset = (left - offsetPoint).normalized;
+                tflObj.transform.LookAt(new Vector3(offsetPoint.x, 2.5f, offsetPoint.z));
+               
+
+                //tflObj.layer = LayerMask.NameToLayer("TrafficLight");
+                var tflcont = tflObj.AddComponent<TrafficLightController>();
+                tflcont.previousNode = child;
+                
+
+                GameObject waitZone = new GameObject("WaitZone");
+                waitZone.transform.position = new Vector3(tflObj.transform.position.x, 1, tflObj.transform.position.z);
+                waitZone.transform.SetParent(tflObj.transform);
+                //waitZone.transform.LookAt(new Vector3(offsetPoint.x, 1, offsetPoint.z));
+                waitZone.transform.LookAt(new Vector3(offsetPoint.x, 1, offsetPoint.z));
+                var waitCollider = waitZone.AddComponent<BoxCollider>();
+                waitCollider.isTrigger = true;
+                waitCollider.size = new Vector3(50, 2.5f, 2.5f);
+                waitCollider.center = new Vector3(-waitCollider.size.x / 2, 0, 1.25f);
+                var waitController = waitZone.AddComponent<WaitZoneController>();
+                waitController.trafficLightController = tflcont;
+                
+
+                var collider = tflObj.GetComponent<BoxCollider>();
+                collider.size = new Vector3(4, 1, 12);
+                collider.center = new Vector3(0, 0, collider.size.z / 2 + 0.5f);
+                collider.isTrigger = true;
+
+                
+
+            }
+
+
+        }
+    }
+    private void GenerateCollisonZones()
+    {
+        if (trafficLights == null) return;
+
+        foreach (TrafficSignal trafficLight in trafficLights)
+        {
+            var children = graph[trafficLight.Id];
+            if (children.Count < 3) continue;
+          
+            Gizmos.DrawWireSphere(trafficLight.Position, 10);
+            Gizmos.color = UnityEngine.Color.magenta;
         }
     }
 
