@@ -1,138 +1,252 @@
-﻿using System;
+﻿
+using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Assets.Entities;
-using Unity.Mathematics;
-using Unity.MLAgents;
 using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Assets.Scripts
 {
+
+    /// <summary>
+    /// Entity spawner
+    /// Spawn vehicles into the road network
+    /// Handles daily spawning (morning, afternoon, evening)
+    /// </summary>
     public class Spawner : MonoBehaviour
     {
+        /// <summary>
+        /// Number of entities that will spawned
+        /// </summary>
+        public int batchSize { get; set; } = 400;
 
-        public int batchSize { get; set; } = 200;
-
+        /// <summary>
+        /// Number of destroyed entities
+        /// </summary>
         public int destroyed = 0;
 
-        public List<Road> roads { get; set; }
+        /// <summary>
+        /// Elapsed time from the start
+        /// </summary>
+        public float elapsedTime { get; set; } = 0;
 
-        public Dictionary<string, Node> nodes { get; set; }
+        /// <summary>
+        /// OSM graph
+        /// </summary>
+        public GraphOSM graph { get; set; }
 
-        public Dictionary<string, List<Node>> graph { get; set; }
-
-        private const int treshold = 10;
-
+        /// <summary>
+        /// Random
+        /// </summary>
         private System.Random random = new System.Random();
 
-
+        /// <summary>
+        /// Vehicles container
+        /// </summary>
         public GameObject vehiclesContainer;
 
-        private void Start()
+        /// <summary>
+        /// All vehicles
+        /// </summary>
+        public List<GameObject> vehicles { get; set; } = new List<GameObject>();
+
+        /// <summary>
+        /// Spawn rate
+        /// </summary>
+        public float spawnRate { get; private set; }
+
+        /*var start82 = graph.Nodes.Where(x => x.Id.Contains("5893594956_FORWARD"));
+        var start83 = graph.Nodes.Where(x => x.Id.Contains("5893594960_FORWARD"));
+        var start28 = graph.Nodes.Where(x => x.Id.Contains("247758788_BACKWARD"));
+
+
+        var goal82 = graph.Nodes.Where(x => x.Id.Contains("247758788_FORWARD"));
+        var goal83 = graph.Nodes.Where(x => x.Id.Contains("5893594960_BACKWARD"));
+        var goal28 = graph.Nodes.Where(x => x.Id.Contains("247758788_FORWARD"));*/
+
+        private List<string> startNodes = new List<string>()
+        {
+            "624135682_5893594956_FORWARD_0", //82
+            "624135682_5893594956_FORWARD_1",
+            "624135682_5893594956_FORWARD_2",
+
+            "624135683_5893594960_FORWARD_0", //83
+            "624135683_5893594960_FORWARD_1",
+
+
+            "623918128_247758788_BACKWARD_0", //28
+            "623918128_247758788_BACKWARD_1",
+
+            /*"26153999_87531833_FORWARD_0", //99
+            "26153999_87531833_FORWARD_1",*/
+        };
+
+
+        private List<string> goalNodes = new List<string>()
+        {
+            "623918128_247758788_FORWARD_0", //82
+            "623918128_247758788_FORWARD_1",
+            "623918128_247758788_FORWARD_1",
+
+
+            "624135683_5893594960_BACKWARD_0", //83
+            "624135683_5893594960_BACKWARD_1",
+
+            "624135683_5893594960_BACKWARD_0", //28
+            "624135683_5893594960_BACKWARD_1"
+
+        };
+
+
+        private List<string[]> paths = new List<string[]>()
+        {
+            new string[]{"624135682_5893594956_FORWARD_2", "623918128_247758788_FORWARD_0"},
+            new string[]{"624135682_5893594956_FORWARD_1", "624135683_5893594960_BACKWARD_1"},
+            new string[]{"624135682_5893594956_FORWARD_0", "624135683_5893594960_BACKWARD_0"},
+            new string[]{"623918128_247758788_BACKWARD_1", "624135682_5893594956_BACKWARD_1"},
+            new string[]{"623918128_247758788_BACKWARD_0", "624135682_5893594956_BACKWARD_0"},
+            new string[]{"624135683_5893594960_FORWARD_0", "624135682_5893594956_BACKWARD_0"},
+            new string[]{"624135683_5893594960_FORWARD_0", "623918128_247758788_FORWARD_0"},
+            new string[]{"624135683_5893594960_FORWARD_1", "623918128_247758788_FORWARD_1" },
+            new string[]{"624135683_5893594960_FORWARD_2", "623918128_247758788_FORWARD_1" },
+            //new string[]{"26153999_87531833_FORWARD_0", "624135683_5893594960_BACKWARD_0" },
+            //new string[]{"26153999_87531833_FORWARD_1", "623918128_247758788_FORWARD_0" }
+            new string[]{ "100126749_1376422360_BACKWARD_0", "623917437_5872190568_BACKWARD_3" },
+            new string[]{ "100126749_1376422360_BACKWARD_0", "623917437_5872190568_BACKWARD_2" },
+            new string[]{ "100126749_1376422360_BACKWARD_0", "623917437_5872190568_BACKWARD_1" }
+        };
+
+        private const float cycleTime = 240f;
+
+
+        private void Awake()
         {
             vehiclesContainer = new GameObject("VehiclesContainer");
         }
 
 
-        private void Update()
+        private void Start()
         {
-            BatchSpawn();
-            SupplementarySpawn();
+            StartCoroutine(SpawnRoutine());
         }
 
 
-        private void BatchSpawn()
+        private void Update()
         {
-            bool isPressed = Input.GetKeyDown(KeyCode.Space);
-            if (isPressed)
+
+            elapsedTime += Time.deltaTime;
+            if (elapsedTime >= cycleTime) {
+                elapsedTime = 0f;
+            }
+
+            elapsedTime += Time.deltaTime;
+
+
+            // Reggeli csúcs (0-1.5 perc)
+            if (elapsedTime < 60f)
             {
-                for (int i = 0; i < batchSize; i++)
-                {
-                    Spawn();
-                }
+
+                spawnRate = 0.25f; // Gyorsabb spawnolás
+            }
+            // Napközben (1.5-3 perc)
+            else if (elapsedTime < 120f)
+            {
+
+                spawnRate = 1f;
+            }
+            // Esti csúcs (3-4.5 perc)
+            else if (elapsedTime < 180f)
+            {
+
+                spawnRate = 0.75f;
+            }
+            // Éjszaka (4.5-5 perc)
+            else
+            {
+               
+                spawnRate = 15f; // Lassabb spawnolás
+            }
+
+            //Debug.Log(elapsedTime);
+          
+        
+        }
+
+
+        IEnumerator SpawnRoutine()
+        {
+            while (true)
+            {
+                Spawn();
+                yield return new WaitForSeconds(spawnRate);
             }
         }
 
 
 
+
+
+        /// <summary>
+        /// Instentiate a vehicle into to the simulation
+        /// </summary>
         private void Spawn()
         {
 
-            int rnd1 = random.Next(0, roads.Count);
-            var road = roads[rnd1];
-            int rnd2 = random.Next(0, road.ControlPoints.Count);
-            var start = road.ControlPoints[rnd2];
+
+            /* var upperLimit = graph.Nodes.Count;
+             var nodes = graph.Nodes.ToList();
+
+             var random1 = random.Next(0, upperLimit - 1);
+             var random2 = random.Next(0, upperLimit - 1);
+
+             var start = nodes[random1];
+
+             if (start.IsIntersectionNode)
+             {
+                 return;
+             }
+
+             var goal = nodes[random2];*/
+
+            var rand = random.Next(0, paths.Count);
+            var randPath = paths[rand];
+            var start = graph.Nodes.FirstOrDefault(x => x.Id == randPath[0]);
+            var goal = graph.Nodes.FirstOrDefault(x => x.Id == randPath[1]);
 
 
             GameObject vehicle = GameObject.CreatePrimitive(PrimitiveType.Cube);
             vehicle.name = "Vehicle";
             vehicle.tag = "Vehicle";
-            vehicle.layer = LayerMask.NameToLayer("Obstacles");
+            vehicle.layer = LayerMask.NameToLayer("VehicleLayer");
             var vehcont = vehicle.AddComponent<AStarAgentController>();
             var rigidBody = vehicle.AddComponent<Rigidbody>();
 
             rigidBody.isKinematic = true;
-            vehcont.gameObject.layer = LayerMask.NameToLayer("Obstacles");
-            vehcont.roads = roads;
-            vehcont.nodes = nodes;
-            vehcont.graph = graph;
             vehcont.start = start;
+            vehcont.goal = goal;
+            vehcont.graphOSM = graph;
             vehcont.spawner = this;
             vehicle.GetComponent<Renderer>().material.color = Color.black;
             vehicle.transform.SetParent(vehiclesContainer.transform);
 
-            GameObject front = new GameObject("Front");
-            front.transform.SetParent(vehicle.transform);
-            var frontCollider = vehicle.AddComponent<BoxCollider>();
-            frontCollider.tag = "Front";
-            frontCollider.isTrigger = true;
-            
-            GameObject back = new GameObject("Back");
-            back.transform.SetParent(vehicle.transform);
-            var backCollider = vehicle.AddComponent<BoxCollider>();
-            backCollider.tag = "Back";
-            backCollider.isTrigger = true;
-
-            GameObject body = new GameObject("Body");
-            body.transform.SetParent(vehicle.transform);
-            var bodyCollider = vehicle.AddComponent<BoxCollider>();
-            bodyCollider.tag = "Body";
-            bodyCollider.isTrigger = true;
+            vehicles.Add(vehicle);
         }
 
-        private void SupplementarySpawn()
-        {
-            if (treshold > destroyed) return;
-            for (int i = 0; i < destroyed; i++)
-            {
-                Spawn();
-            }
-
-            destroyed = 0;
-        }
-
-
-        public void SetDestroyed()
-        {
-            destroyed++;
-        }
-
-
+        /// <summary>
+        /// Respawn
+        /// </summary>
         public void Respawn()
         {
-            
+            elapsedTime = 0;
             destroyed = 0;
-            var vehicles = FindObjectsByType<AStarAgentController>(FindObjectsSortMode.None).ToList();
+            spawnRate = 0.5f;
+
             foreach (var vehicle in vehicles)
             {
-                var controller = vehicle.GetComponent<AStarAgentController>();
-                controller.DestroySelf();
+                Destroy(vehicle);
             }
-            BatchSpawn();
+            
         }
 
 

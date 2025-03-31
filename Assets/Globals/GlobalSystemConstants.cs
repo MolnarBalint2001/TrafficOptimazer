@@ -12,7 +12,7 @@ namespace Globals
 
         public const string TARG_BUILDING_EXPR = "building";
 
-        public const string OSM_FILES_DIRECTORY_PATH = "C:\\Users\\molnar.balint\\Desktop\\Egyetem\\TrafficOptimazer\\Assets\\OSM";
+        public const string OSM_FILES_DIRECTORY_PATH = "C:\\Users\\balin\\Desktop\\PRO\\TrafficOptimazer\\Assets\\OSM";
 
         public const string XML_ROOT_ELEMENT_TAG = "osm";
 
@@ -22,5 +22,14 @@ namespace Globals
 
         public const float EARTH_RADIUS = 6371.0f;
 
+
+
+       
+
     }
+
+
+
+
+   
 }

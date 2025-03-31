@@ -15,6 +15,11 @@ namespace Assets.Entities
         public string Id { get; set; }
 
         /// <summary>
+        /// Road unique identifier
+        /// </summary>
+        public string RoadId { get; set; }
+
+        /// <summary>
         /// Node position
         /// </summary>
         public Vector3 Position { get; set; }
@@ -24,6 +29,19 @@ namespace Assets.Entities
         /// </summary>
         public bool IsIntersectionNode { get; set; } = false;
 
+        /// <summary>
+        /// How many roads intersect
+        /// </summary>
+        public int IntersectCount { get; set; }
+
+        /// <summary>
+        /// Padded lane position
+        /// </summary>
+        public Vector3 PaddedLanePosition { get; set; }
+
+
+        public Vector3 OriginalPosition { get; set; }    
+
 
         /// <summary>
         /// String representation of the Node
@@ -31,7 +49,7 @@ namespace Assets.Entities
         /// <returns>Representation</returns>
         public override string ToString()
         {
-            return $"<Node(Id={Id}, Pos={Position} IsIntersection={IsIntersectionNode}>";
+            return $"<Node(Id={Id}, RoadId={RoadId}, Pos={Position}, IsIntersection={IsIntersectionNode}>";
         }
 
     }

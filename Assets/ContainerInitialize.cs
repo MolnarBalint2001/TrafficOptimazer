@@ -13,6 +13,11 @@ using Unity.VisualScripting;
 using Unity.MLAgents.Policies;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
+using System.Runtime.CompilerServices;
+using UnityEngine.UIElements;
+using static Unity.VisualScripting.Metadata;
+using UnityEngine.TerrainUtils;
+using System.IO.Abstractions;
 
 
 /*[out:xml]
@@ -35,6 +40,13 @@ out skel qt;*/
 /// </summary>
 public class ContainerInitialize : MonoBehaviour
 {
+
+
+    public List<Road> testRoads = new List<Road>();
+
+
+    public TrafficSignal testTrafficSignal = new TrafficSignal();
+
     /// <summary>
     /// XML processor service
     /// </summary>
@@ -66,39 +78,157 @@ public class ContainerInitialize : MonoBehaviour
     /// </summary>
     private List<TrafficSignal> trafficLights;
 
-    public SplineContainer splineContainer;
+    /// <summary>
+    /// Intersections
+    /// </summary>
+    private List<IntersectionController> intersections { get; } = new List<IntersectionController>();
 
     const float roadWidth = 2.5f;
 
     public Material roadMaterial;
 
+    public static int intersectionCount { get; set; } = 0;
+    public static int trafficLightsCount { get; set; } = 0;
+
+
+    
+
+
+    public static MapData mapData { get; set; }
+
+
+   
 
     void Awake()
     {
-        // Betöltjük a Material-t a Resources-ből
-        roadMaterial = Resources.Load<Material>("Materials/RoadMaterial");
-        if (roadMaterial == null)
-        {
-            Debug.LogError("Nem található a Material a megadott úton!");
-        }
+        /*ContainerInitialize.mapData = xmlProcessorService.LoadXMLDocument("manhattan_training1.osm");
+        GlobalNetworkService.InitializeStore(ContainerInitialize.mapData.Roads);
+        GlobalNetworkService.StoreToString();
+        CalculateSpaceSizeValues();
+        GenerateNetwork();
+        GenerateLanesAndRoads();*/
+
+
     }
     void Start()
     {
-
-        GameObject tf = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        tf.AddComponent<TrafficLightController>();
-        tf.transform.position = new Vector3(0, 2, 0);
-        //GenerateNetwork();
         //InitializeServices();
     }
-    void Update()
+
+
+   
+   
+    private void GenerateLanesAndRoads()
     {
-      
+
+        List<RoadData> roadDataList = new List<RoadData>();
+        foreach (var road in mapData.Roads)
+        {
+
+            RoadData roadData = new RoadData();
+
+            List<LaneData> laneDataList = new List<LaneData>();
+
+            for (int i = 0; i < road.Lanes; i++)
+            {
+                laneDataList.Add(new LaneData());
+            }
+
+            if (road.Lanes == 1)
+            {
+                laneDataList[0].LanePoints.AddRange(road.ControlPoints.Select(x=>x.Position).ToList());
+                continue;
+            }
+            for (int j = 0; j < road.ControlPoints.Count - 1; j++)
+            {
+
+               
+
+                var currentNode = road.ControlPoints[j];
+                var nextNode = road.ControlPoints[j + 1];
+
+                Debug.DrawLine(currentNode.Position, nextNode.Position, Color.cyan, float.PositiveInfinity);
+
+                if (currentNode.IsIntersectionNode)
+                {
+                    Debug.DrawLine(currentNode.Position, new Vector3(currentNode.Position.x, 2, currentNode.Position.z), Color.red, float.PositiveInfinity);
+                }
+               
+
+                var direction = nextNode.Position - currentNode.Position;
+                var normal = Vector3.Cross(direction, Vector3.up).normalized;
+
+               
+                
+                //Generate x lanes
+                for (int i = 0; i < road.Lanes; i++)
+                {
+                    
+                    if (i < road.Lanes / 2)
+                    {
+                        /*var lanePoint = currentNode.Position + normal * (i + 1) * 3.5f;
+                        laneDataList[i].LanePoints.Add(lanePoint);
+                        laneDataList[i].IsBackward = true;*/
+
+                       
+                    }
+                    else
+                    {
+                        /*var lanePoint = currentNode.Position - normal * (i - road.Lanes / 2 + 1) * 3.5f;
+                        laneDataList[i].LanePoints.Add(lanePoint);
+                        laneDataList[i].IsBackward = false;*/
+                    }
+                }
+            }
+
+            roadData.Lanes = laneDataList;
+            roadData.Path = road.ControlPoints.Select(x => x.Position).ToList();
+            roadDataList.Add(roadData);
+        }
+
+        
+        foreach (var roadData in roadDataList)
+        {
+            foreach (var laneData in roadData.Lanes)
+            {
+                for (int i = 0; i<laneData.LanePoints.Count - 1; i++)
+                {
+                    var currentLanePoint = laneData.LanePoints[i];
+                    var nextLanePoint = laneData.LanePoints[i + 1];
+                    
+                    //Debug.DrawLine(currentLanePoint, nextLanePoint, laneData.Right ? Color.yellow : Color.magenta, float.PositiveInfinity);
+                    //Debug.DrawLine(roadData.Path[i], roadData.Path[i+1], Color.white, float.PositiveInfinity);
+                }
+            }
+        }
+
+       
     }
-    private void OnDrawGizmos()
+
+    /*private void OnDrawGizmos()
     {
-        GenerateCollisonZones();
-    }
+
+        foreach (var road in mapData.Roads)
+        {
+
+            var controlPoints = road.ControlPoints;
+            for (int i = 0; i < controlPoints.Count - 1; i++)
+            {
+
+                var currentNode = controlPoints[i];
+                var nextNode = controlPoints[i + 1];
+
+                var direction = nextNode.Position - currentNode.Position;
+                var normal = Vector3.Cross(Vector3.up, direction).normalized;
+
+                Gizmos.DrawLine(currentNode.Position, nextNode.Position);
+
+
+
+            }
+
+        }
+    }*/
     private void InitializeServices()
     {
         if (spawner == null)
@@ -106,9 +236,7 @@ public class ContainerInitialize : MonoBehaviour
             GameObject spawnerObject = new GameObject("Spawner");
             spawnerObject.transform.SetParent(transform);
             spawner = spawnerObject.AddComponent<Spawner>();
-            spawner.nodes = nodeCollection;
-            spawner.roads = roads;
-            spawner.graph = graph;
+           
         }
 
 
@@ -116,21 +244,18 @@ public class ContainerInitialize : MonoBehaviour
         var masterController = masterAgent.AddComponent<MasterController>();
         masterController.spawner = spawner;
 
-        var behaviorParams = masterAgent.AddComponent<BehaviorParameters>();
-        behaviorParams.BrainParameters.ActionSpec = ActionSpec.MakeContinuous(trafficLights.Count * 2);
-        behaviorParams.BehaviorType = BehaviorType.Default;
-        
-
         var decisionRequester = masterAgent.AddComponent<DecisionRequester>();
-        decisionRequester.DecisionPeriod = 5;
+        decisionRequester.DecisionPeriod = 50;
 
 
     }
     private void GenerateNetwork()
     {
-        MapData mapData = xmlProcessorService.LoadXMLDocument("manhattan_training1.osm");
-        GenerateRoads(mapData.Roads);
-        GenerateTrafficLights(mapData.TrafficLights);
+
+
+        //GenerateRoads(mapData.Roads);
+        //GenerateIntersections(mapData.TrafficLights);
+        //GenerateTrafficLights(mapData.TrafficLights);
     }
     private void GenerateRoads(List<Road> r)
     {
@@ -140,7 +265,6 @@ public class ContainerInitialize : MonoBehaviour
         roads = r;
         graph = GraphBuilder.BuildGraph(roads);
         nodeCollection = GraphBuilder.BuildNodeCollection(roads);
-        //GraphBuilder.PrintGraph(graph);
 
 
 
@@ -153,9 +277,7 @@ public class ContainerInitialize : MonoBehaviour
                 var currentNode = road.ControlPoints[i];
                 var nextNode = road.ControlPoints[i + 1];
 
-               
-               
-               
+
                 //Debug.DrawLine(currentNode.Position, nextNode.Position, Color.green, float.PositiveInfinity);
 
                 if (currentNode.IsIntersectionNode)
@@ -345,35 +467,44 @@ public class ContainerInitialize : MonoBehaviour
     }
     private void GenerateTrafficLights(List<TrafficSignal> tflList)
     {
-
-        trafficLights = tflList;
         GameObject trafficLightsContainer = new GameObject("TrafficLightContainer");
 
-        foreach (var trafficLight in trafficLights)
+        trafficLights = tflList;
+        List<TrafficLightController> allTrafficLights = new List<TrafficLightController>();
+        foreach (var trafficLight in tflList)
         {
             var children = graph[trafficLight.Id];
+
             if (children.Count <= 2)
             {
                 continue;
             }
 
-            for (int i = 0; i<children.Count; i++)
+            var childControllers = new List<TrafficLightController>();
+
+
+            for (int i = 0; i < children.Count; i++)
             {
+
+                Debug.Log($"Traffic light {trafficLight.Id} RoadIds=" + string.Join(", ", children.Select(x => x.RoadId).ToArray()));
+
                 var child = children[i];
+                Debug.DrawLine(child.Position, new Vector3(child.Position.x, 2, child.Position.z), Color.magenta, float.PositiveInfinity);
                 var direction = (child.Position - trafficLight.Position).normalized;
                 var offsetPoint = trafficLight.Position + direction * 5f;
                 var normal = Vector3.Cross(direction, Vector3.up).normalized;
                 var left = offsetPoint + normal * roadWidth;
 
-                Debug.DrawLine(trafficLight.Position, offsetPoint, Color.magenta, float.PositiveInfinity);
-                Debug.DrawLine(offsetPoint, left, Color.magenta, float.PositiveInfinity);
+                Debug.DrawLine(trafficLight.Position, child.Position, Color.magenta, float.PositiveInfinity);
+
+
 
                 Vector3[] scopeBounds = new Vector3[4];
 
                 var childChildren = graph[child.Id];
-                Debug.DrawLine(child.Position, childChildren[0].Position, Color.magenta, float.PositiveInfinity);
+                //Debug.DrawLine(child.Position, childChildren[0].Position, Color.magenta, float.PositiveInfinity);
                 var d = (child.Position - trafficLight.Position);
-                Debug.DrawLine(left, child.Position, Color.red, float.PositiveInfinity);
+                //Debug.DrawLine(left, child.Position, Color.red, float.PositiveInfinity);
 
                 GameObject tflObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 tflObj.name = "TrafficLight";
@@ -383,12 +514,15 @@ public class ContainerInitialize : MonoBehaviour
                 tflObj.transform.SetParent(trafficLightsContainer.transform);
                 var directionToOffset = (left - offsetPoint).normalized;
                 tflObj.transform.LookAt(new Vector3(offsetPoint.x, 2.5f, offsetPoint.z));
-               
 
-                //tflObj.layer = LayerMask.NameToLayer("TrafficLight");
+
                 var tflcont = tflObj.AddComponent<TrafficLightController>();
-                tflcont.previousNode = child;
-                
+                //tflcont.previousNode = child;
+                tflcont.IntersectionId = trafficLight.Id;
+                tflcont.RoadId = child.RoadId;
+                childControllers.Add(tflcont);
+
+
 
                 GameObject waitZone = new GameObject("WaitZone");
                 waitZone.transform.position = new Vector3(tflObj.transform.position.x, 1, tflObj.transform.position.z);
@@ -401,19 +535,156 @@ public class ContainerInitialize : MonoBehaviour
                 waitCollider.center = new Vector3(-waitCollider.size.x / 2, 0, 1.25f);
                 var waitController = waitZone.AddComponent<WaitZoneController>();
                 waitController.trafficLightController = tflcont;
-                
+
 
                 var collider = tflObj.GetComponent<BoxCollider>();
                 collider.size = new Vector3(4, 1, 12);
                 collider.center = new Vector3(0, 0, collider.size.z / 2 + 0.5f);
                 collider.isTrigger = true;
 
-                
-
+                allTrafficLights.Add(tflcont);
             }
 
 
+
+            for (int i = 0; i < childControllers.Count - 1; i++)
+            {
+                if (childControllers[i].RoadId == childControllers[i + 1].RoadId)
+                {
+                    childControllers[i].relatedTrafficLight = childControllers[i + 1];
+                    childControllers[i + 1].relatedTrafficLight = childControllers[i];
+
+                    Debug.DrawLine(childControllers[i].transform.position, childControllers[i + 1].transform.position, Color.red, float.PositiveInfinity);
+                }
+            }
+            childControllers.Clear();
         }
+
+
+
+    }
+    private void GenerateIntersections(List<TrafficSignal> tflList)
+    {
+        GameObject intersectionContainer = new GameObject("IntersectionContainer");
+
+
+        foreach (var intersection in tflList)
+        {
+
+
+            string intersectionId = intersection.Id;
+
+            GameObject intersectionGameObject = new GameObject("Intersection");
+
+
+            var connectedNodes = graph[intersectionId];
+
+            if (connectedNodes.Count <= 2)
+            {
+                continue;
+            }
+            else
+            {
+                var childControllers = new List<TrafficLightController>();
+
+
+                for (int i = 0; i < connectedNodes.Count; i++)
+                {
+
+
+                    var connectedNode = connectedNodes[i];
+
+                    var direction = (connectedNode.Position - intersection.Position).normalized;
+                    var offsetPoint = intersection.Position + direction * 5f;
+                    var normal = Vector3.Cross(direction, Vector3.up).normalized;
+                    var left = offsetPoint + normal * roadWidth;
+
+
+                    Vector3[] scopeBounds = new Vector3[4];
+
+
+                    #region Generate traffic lights per intersection
+
+                    GameObject tflObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    tflObj.name = "TrafficLight";
+                    tflObj.tag = "TrafficLight";
+                    tflObj.transform.localScale = new Vector3(0.2f, 5, 0.2f);
+                    tflObj.transform.position = new Vector3(left.x, 2.5f, left.z);
+                    tflObj.transform.SetParent(intersectionGameObject.transform);
+                    var directionToOffset = (left - offsetPoint).normalized;
+                    tflObj.transform.LookAt(new Vector3(offsetPoint.x, 2.5f, offsetPoint.z));
+
+
+                    var tflcont = tflObj.AddComponent<TrafficLightController>();
+                    //tflcont.previousNode = connectedNode;
+                    tflcont.IntersectionId = intersection.Id;
+                    tflcont.RoadId = connectedNode.RoadId;
+                    childControllers.Add(tflcont);
+
+
+
+                    GameObject waitZone = new GameObject("WaitZone");
+                    waitZone.transform.position = new Vector3(tflObj.transform.position.x, 1, tflObj.transform.position.z);
+                    waitZone.transform.SetParent(tflObj.transform);
+                    //waitZone.transform.LookAt(new Vector3(offsetPoint.x, 1, offsetPoint.z));
+                    waitZone.transform.LookAt(new Vector3(offsetPoint.x, 1, offsetPoint.z));
+                    var waitCollider = waitZone.AddComponent<BoxCollider>();
+                    waitCollider.isTrigger = true;
+                    waitCollider.size = new Vector3(50, 2.5f, 2.5f);
+                    waitCollider.center = new Vector3(-waitCollider.size.x / 2, 0, 1.25f);
+                    var waitController = waitZone.AddComponent<WaitZoneController>();
+                    waitController.trafficLightController = tflcont;
+
+
+                    var collider = tflObj.GetComponent<BoxCollider>();
+                    collider.size = new Vector3(4, 1, 12);
+                    collider.center = new Vector3(0, 0, collider.size.z / 2 + 0.5f);
+                    collider.isTrigger = true;
+
+                    #endregion
+                }
+
+                #region Connect related traffic lights
+
+                for (int i = 0; i < childControllers.Count - 1; i++)
+                {
+                    if (childControllers[i].RoadId == childControllers[i + 1].RoadId)
+                    {
+                        childControllers[i].relatedTrafficLight = childControllers[i + 1];
+                        childControllers[i + 1].relatedTrafficLight = childControllers[i];
+
+                        Debug.DrawLine(childControllers[i].transform.position, childControllers[i + 1].transform.position, Color.red, float.PositiveInfinity);
+                    }
+                }
+
+
+                #endregion
+
+
+                #region Connect traffic lights to intersection
+
+                IntersectionController intersectionController = intersectionGameObject.AddComponent<IntersectionController>();
+                intersectionController.Id = intersectionId;
+                intersectionController.trafficLightsGroup.AddRange(childControllers);
+
+                intersectionGameObject.transform.SetParent(intersectionContainer.transform);
+                intersections.Add(intersectionController);
+
+
+
+                #endregion
+
+                childControllers.Clear();
+            }
+
+
+
+
+
+        }
+
+
+
     }
     private void GenerateCollisonZones()
     {
@@ -423,12 +694,35 @@ public class ContainerInitialize : MonoBehaviour
         {
             var children = graph[trafficLight.Id];
             if (children.Count < 3) continue;
-          
-            Gizmos.DrawWireSphere(trafficLight.Position, 10);
-            Gizmos.color = UnityEngine.Color.magenta;
+
+            //Gizmos.DrawWireSphere(trafficLight.Position, 10);
+            //Gizmos.color = UnityEngine.Color.magenta;
         }
     }
+    private void CalculateSpaceSizeValues()
+    {
+        int count = 0;
+        var graph = GraphBuilder.BuildGraph(mapData.Roads);
+        foreach (var intersection in mapData.TrafficLights)
+        {
 
+            string intersectionId = intersection.Id;
+
+            var connectedNodes = graph[intersectionId];
+
+            if (connectedNodes.Count <= 2)
+            {
+                continue;
+            }
+            else
+            {
+                count += connectedNodes.Count;
+            }
+        }
+
+        trafficLightsCount = count;
+        intersectionCount = mapData.TrafficLights.Count;
+    }
 
 }
 

@@ -5,8 +5,10 @@ using Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Xml.Linq;
 using UnityEngine;
+using static Assets.Entities.TrafficSignal;
 
 namespace Assets.Services
 {
@@ -17,17 +19,21 @@ namespace Assets.Services
     public class XmlProcessorService : IXmlProcessorService
     {
 
-        private const int SCALE_CONSTANT = 150000;
+        private const float SCALE_CONSTANT = 150000f;
+
+        private const float EARTH_RADIUS = 6378137f;
+
+
 
         /// <summary>
         /// OSM map minimum longitude
         /// </summary>
-        private float _minlon { get; set; }
+        private static float _minlon { get; set; }
 
         /// <summary>
         /// OSM map minimum latitude
         /// </summary>
-        private float _minlat { get; set; }
+        private static float _minlat { get; set; }
 
         /// <summary>
         /// OSM map maximum latitude
@@ -38,6 +44,9 @@ namespace Assets.Services
         /// OSM map maximum longitude
         /// </summary>
         private float _maxlon { get; set; }
+
+        private const float METERS_PER_DEGREE_LAT = 111320f; // 1 fok szélesség kb. 111 km
+        private float METERS_PER_DEGREE_LON = 111320f * Mathf.Cos(_minlat * Mathf.Deg2Rad);
 
         /// <summary>
         /// All node elements from OSM data
@@ -106,6 +115,8 @@ namespace Assets.Services
 
         #region Calculations
 
+
+      
 
         /// <summary>
         /// Normalizing given latitude and longitude values
@@ -202,19 +213,37 @@ namespace Assets.Services
                 }).ToList();
 
 
+
+              
                 Road road = new Road();
+                string roadId = way.Attribute("id").Value;
+                road.Id = roadId;
 
+                List<XElement> wayTags = way.Elements("tag").ToList();
+                XElement laneTag = wayTags.Where(x=>x.Attribute("k").Value == "lanes").FirstOrDefault();
+                XElement lanesBackward = wayTags.Where(x=>x.Attribute("k").Value == "lanes:backward").FirstOrDefault();
+                XElement lanesForward = wayTags.Where(x=>x.Attribute("k").Value == "lanes:forward").FirstOrDefault();
+                XElement turnLanesBackward = wayTags.Where(x=>x.Attribute("k").Value == "turn:lanes:backward").FirstOrDefault();
+                XElement turnLanesForward = wayTags.Where(x=>x.Attribute("k").Value == "turn:lanes:forward").FirstOrDefault();
+                XElement turnLanes = wayTags.Where(x=>x.Attribute("k").Value == "turn:lanes").FirstOrDefault();
+                XElement oneWay = wayTags.Where(x => x.Attribute("k").Value == "oneway").FirstOrDefault();
+              
+                int lanes = laneTag == null ? 2 : int.Parse(laneTag.Attribute("v")?.Value);
+              
+                road.Lanes = lanes;
 
-                List<Node> controlPoints = wayNodeList.Select(node =>
+                road.IsOneWay = oneWay != null ? oneWay.Attribute("v")?.Value == "yes" : false;
+
+                road.TurnLanes = turnLanes?.Attribute("v")?.Value;
+                road.TurnLanesForward = turnLanesForward?.Attribute("v")?.Value;
+                road.TurnLanesBackward = turnLanesBackward?.Attribute("v")?.Value;
+                road.BackwardLanes = road.IsOneWay ? 0 : int.Parse(lanesBackward?.Attribute("v")?.Value ?? $"{lanes / 2 * 1}");
+                road.ForwardLanes = road.IsOneWay ? road.Lanes : int.Parse(lanesForward?.Attribute("v")?.Value ?? $"{lanes / 2 * 1}");
+               
+                List <Node> controlPoints = wayNodeList.Select(node =>
                 {
-
+                    //Meg kell nézni hogy másikba is benne van a node és annak pozícióját
                     string id = node.Attribute("id").Value;
-                    if (id == "42428179")
-                    {
-
-                        int tagCount = node.Elements("tag").Count();
-                        Debug.Log($"XML process: {id} tags:{tagCount}");
-                    }
 
                     float lat = ParseFloat(node.Attribute("lat")!.Value);
                     float lon = ParseFloat(node.Attribute("lon")!.Value);
@@ -224,26 +253,143 @@ namespace Assets.Services
 
                     Node cp = new Node();
                     cp.Id = id;
+                    cp.RoadId = roadId;
                     cp.Position = new Vector3(normLon, 0, normLat);
-                    cp.IsIntersectionNode = CheckNodeIntersection(id);
+                    (bool isIntNode, int count) = CheckNodeIntersection(id);
+                    cp.IsIntersectionNode = isIntNode;
+                    cp.IntersectCount = count;
+                    cp.OriginalPosition = new Vector3(normLon, 0, normLat);
+                   
                     return cp;
                 }).ToList();
 
                 road.ControlPoints = controlPoints;
+
+             
                 roadList.Add(road);
 
 
+             
             });
 
-            Debug.Log($"Road list count: {roadList.Count}");
 
-            return roadList;
+            List<Road> finalRoads = new List<Road>();
+            foreach (var road in roadList)
+            {
+                bool findSplit = false;
+                foreach (var cp in road.ControlPoints)
+                {
+                    (bool shouldSplit, Road splitRoad) = ShouldRoadSplit(roadList, cp);
+                    if (shouldSplit && splitRoad.Id == road.Id)
+                    {
+                        findSplit = true;
+                        var splitResult = SplitRoad(cp, road);
+                        finalRoads.AddRange(splitResult);
+                    }
+                  
+                }
+
+                if (!findSplit)
+                {
+                    finalRoads.Add(road);
+                }
+
+            }
+            return finalRoads;
         }
 
 
-        private bool CheckNodeIntersection(string nodeId)
+        private (bool, int) CheckNodeIntersection(string nodeId)
         {
-            return _wayElements.Where(way => GetRefElementsForWay(way).Contains(nodeId)).ToList().Count() > 1;
+            int count = _wayElements.Where(way => GetRefElementsForWay(way).Contains(nodeId)).ToList().Count();
+            return (count > 1, count);
+        }
+
+
+        private List<Road> SplitRoad(Node splitNode, Road road)
+        {
+            List<Road> splittedRoads = new List<Road>();
+
+            var road1 = new Road();
+            var road2 = new Road();
+            road1.Id = road.Id + $"-sr0-{splitNode.Id}";
+            road1.TurnLanes = road.TurnLanes;
+            road1.TurnLanesBackward = road.TurnLanesBackward;
+            road1.TurnLanesForward = road.TurnLanesForward;
+            road1.Lanes = road.Lanes;
+            road1.IsOneWay = road.IsOneWay;
+            road1.ForwardLanes = road.ForwardLanes;
+            road1.BackwardLanes = road.BackwardLanes;
+
+
+            road2.Id = road.Id + $"-sr1-{splitNode.Id}";
+            road2.TurnLanes = road.TurnLanes;
+            road2.TurnLanesBackward = road.TurnLanesBackward;
+            road2.TurnLanesForward = road.TurnLanesForward;
+            road2.Lanes = road.Lanes;
+            road2.IsOneWay = road.IsOneWay;
+            road2.ForwardLanes = road.ForwardLanes;
+            road2.BackwardLanes = road.BackwardLanes;
+
+            //Split point index
+            int nodeIndex = road.ControlPoints.FindIndex(x => x.Id == splitNode.Id);
+
+            int r1Index = road.ControlPoints.Count - 1;
+            int r2Index = 0;
+
+            for (int i = nodeIndex + 1; i < road.ControlPoints.Count; ++i)
+            {
+                if (road.ControlPoints[i].IsIntersectionNode)
+                {
+                    
+                    r1Index = i;
+                    break;
+                }
+            }
+
+            
+            for (int i = nodeIndex - 1; i >= 0; --i)
+            {
+                if (road.ControlPoints[i].IsIntersectionNode)
+                {
+                    r2Index = i;
+                    break;
+                }
+            }
+
+           
+            road1.ControlPoints.AddRange(road.ControlPoints.Skip(nodeIndex).Take(r1Index - nodeIndex + 1));
+            road2.ControlPoints.AddRange(road.ControlPoints.Skip(r2Index).Take(nodeIndex - r2Index + 1));
+           
+
+            splittedRoads.Add(road1);
+            splittedRoads.Add(road2);
+           
+
+            return splittedRoads;
+        }
+
+
+
+        private (bool, Road) ShouldRoadSplit(List<Road> roads, Node splitNode)
+        {
+            var filteredRoads = roads.Where(x=>x.ControlPoints.Any(y=>y.Id == splitNode.Id));
+            bool isInner = false;
+            bool isLastOrFirst = false;
+            Road splitRoad = null;
+            foreach (var road in filteredRoads)
+            {
+                int index = road.ControlPoints.FindIndex(x => x.Id == splitNode.Id);
+                isInner = (index != 0 && index != road.ControlPoints.Count - 1) || isInner;
+                if (index != 0 && index != road.ControlPoints.Count - 1)
+                {
+                    splitRoad = road;
+                }
+             
+                isLastOrFirst = (index == 0 || index == road.ControlPoints.Count - 1) || isLastOrFirst;
+            }
+
+            return (isInner && isLastOrFirst, splitRoad);
         }
 
 
@@ -313,6 +459,36 @@ namespace Assets.Services
             List<TrafficSignal> trafficLights = trafficLightElements.Select(x =>
             {
                 string id = x.Attribute("id")?.Value;
+
+                var tags = x.Elements("tag");
+                var directionTag = tags.FirstOrDefault(y=>y.Attribute("k").Value == "traffic_signals:direction");
+                var crossingTag = tags.FirstOrDefault(y=>y.Attribute("k").Value == "crossing");
+
+
+                var crossingTagValue = crossingTag?.Attribute("v").Value;
+
+                SignalDirection signalDirection =  /*crossingTagValue == "traffic_signals" ? SignalDirection.BOTH :*/ SignalDirection.FORWARD;
+
+                if (directionTag != null)
+                {
+
+                    var directionTagValue = directionTag.Attribute("v").Value;
+
+                    if (directionTagValue == "both")
+                    {
+                        signalDirection = SignalDirection.BOTH;
+                    }
+                    else if (directionTagValue == "forward")
+                    {
+                        signalDirection = SignalDirection.FORWARD;
+                    }
+                    else if (directionTagValue == "backward")
+                    {
+                        signalDirection = SignalDirection.BACKWARD;
+                    }
+                }
+            
+             
                 float lat = ParseFloat(x.Attribute("lat")!.Value);
                 float lon = ParseFloat(x.Attribute("lon")!.Value);
                 (float normLat, float normLon) = Normalize(lat, lon);
@@ -320,6 +496,7 @@ namespace Assets.Services
                 TrafficSignal trafficSignal = new TrafficSignal();
                 trafficSignal.Id = id;
                 trafficSignal.Position = new Vector3(normLon, 0, normLat);
+                trafficSignal.Direction = signalDirection;
 
                 return trafficSignal;
             }).ToList();

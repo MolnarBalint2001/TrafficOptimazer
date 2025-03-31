@@ -20,7 +20,8 @@ namespace Assets.Scripts
 
         private void OnTriggerEnter(Collider other)
         {
-            if (other.gameObject.CompareTag("Vehicle"))
+            
+            if (other.CompareTag("Vehicle"))
             {
                 trafficLightController.ObjectEnteredWaitZone(other.gameObject);
             }
@@ -28,7 +29,8 @@ namespace Assets.Scripts
 
         private void OnTriggerExit(Collider other)
         {
-            if (other.gameObject.CompareTag("Vehicle"))
+           
+            if (other.CompareTag("Vehicle"))
             {
                 trafficLightController.ObjectExitedWaitZone(other.gameObject);
             }
@@ -38,6 +40,7 @@ namespace Assets.Scripts
 
         private void OnDrawGizmos()
         {
+            
             // Ellenőrizzük, hogy van-e BoxCollider
             if (boxCollider != null)
             {

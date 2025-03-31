@@ -11,7 +11,7 @@ namespace Assets.Entities
     public class TrafficSignal
     {
 
-        public enum TrafficSignalDirection
+        public enum SignalDirection
         {
             BOTH,
             BACKWARD,
@@ -26,7 +26,7 @@ namespace Assets.Entities
         /// <summary>
         /// Direction
         /// </summary>
-        public TrafficSignalDirection? Direction { get; set; }
+        public SignalDirection? Direction { get; set; }
 
         /// <summary>
         /// Location
